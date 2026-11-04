@@ -136,34 +136,3 @@ jobs:
           name: cibw-macos-wheels
           path: ./wheelhouse/*.whl
 
-  publish:
-    needs: [build_sdist, build_linux_wheels, build_windows_wheels, build_macos_wheels]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
-    permissions:
-      contents: write
-      id-token: write
-    steps:
-      - uses: actions/download-artifact@v8
-        with:
-          path: dist
-          pattern: cibw-*
-          merge-multiple: true
-
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          skip-existing: true
-          verbose: true
-
-      - name: Generate Release Note
-        run: |
-          echo "See changelog: https://plutoprint.readthedocs.io/en/latest/changelog.html#${GITHUB_REF_NAME//./-}" > RELEASENOTE.md
-      - name: Publish to GitHub Release
-        uses: softprops/action-gh-release@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          body_path: RELEASENOTE.md
-          files: |
-            dist/plutoprint-*.whl
-            dist/plutoprint-*.tar.gz
